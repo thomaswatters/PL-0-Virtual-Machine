@@ -14,18 +14,18 @@ static const int MAX_NUM_LEN = 5;
 
 int main(int argc, const char * argv[]) {
     FILE *file;
+    int c;
     
-    if (argc > 1)
-        file = fopen(argv[1], "r" );
-    else
-        file = fopen("input.txt", "r" );
-    
-    /* fopen returns 0, the NULL pointer, on failure */
-    if ( file == 0 )
-    {
-        printf( "Could not open file\n" );
+    if (!(file = fopen("input.txt", "r" ))) {
+        perror("input.txt");
         exit(1);
     }
     
+    while ((c = fgetc(file)) != EOF) {
+        
+        // now do something with each character, c.
+        
+    }
     
+    fclose(file);
 }
