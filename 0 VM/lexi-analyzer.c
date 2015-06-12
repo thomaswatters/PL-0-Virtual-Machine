@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
 
 #define norw 15 /* number of reserved words */
 #define imax 32767 /* maximum integer value */
@@ -45,39 +47,6 @@ int wsym[] = {nulsym, beginsym, callsym, constsym, dosym, elsesym, endsym, ifsym
 /*list of special symbols*/
 int ssym[256] = {0};
 
-void parseInput(char inputStream[]) {
-    //parse input char by char, giant ass switch statment
-    int state = 0;
-    int i = 0; //token end index
-    int j = 0; //token begin index
-    int ch = 0;
-    
-    /*
-     TODO:
-     two indicies, one points to start of current token substring, the other points to the end.
-     iterate through input until a token delim is found.
-     send token to be processed.
-     */
-    
-    while ( (ch = inputStream[i]) != EOF) {
-    
-    }
-    
-    
-}
-
-char* fillInputStream(FILE* file) {
-    static char inputStream[267];
-    int c;
-    int i = 0;
-    
-    while ((c = fgetc(file)) != EOF) {
-        inputStream[i] = c;
-    }
-    
-    return inputStream;
-}
-
 void fillSsym() {
     ssym['+'] = plussym;
     ssym['-'] = minussym;
@@ -97,6 +66,82 @@ void fillSsym() {
     ssym[':'] = becomessym;
 }
 
+int isTokenDelim(char ch) {
+    //if ssym[ch] is not zero then ch is a special symbol
+    if ( ssym[ch] != 0) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+//C passes by value and makes a copy so that changs made in this functions local scope will not effect the caller
+void processToken(int start,int end, char stream[] ) {
+    int i = 0;
+    int len = end - start;
+    char *token;
+    
+    strncpy ( token, stream, len );
+    
+    for (i = 0; i < norw; i++) {
+        //reserved word found
+        if ( strcmp ( word[i], token ) == 0) {
+            //DO STUFF!
+        }
+    }
+    
+}
+
+void tokenizeInput(char inputStream[]) {
+    int i = 0; //token being index
+    int j = 0; //token end index
+    int ch = 0;
+    
+    /*
+     TODO:
+     two indicies, one points to start of current token substring, the other points to the end.
+     iterate through input until a token delim is found.
+     send token to be processed.
+     */
+    
+    /*tokens are seperated by either whitespace or special symbols and operators*/
+    while ( (ch = inputStream[j]) != EOF) {
+        //ch is whitespace
+        if ( isspace(ch) != 0 ) {
+            processToken(i,j,inputStream);
+            //print white space to files using j
+            i = j + 1;
+            j++;
+        }
+        //ch is special symbol
+        else if ( isTokenDelim(ch) ) {
+            processToken(i,j,inputStream);
+            //process special sym
+            //print symbol to files using j
+            i = j + 1;
+            j++;
+        }
+        //ch is the next character in a token
+        else {
+            //dont forget the error checking, damnit
+            j++;
+        }
+    }
+}
+
+char* fillInputStream(FILE* file) {
+    static char inputStream[267];
+    int c;
+    int i = 0;
+    
+    while ((c = fgetc(file)) != EOF) {
+        inputStream[i] = c;
+    }
+    
+    return inputStream;
+}
+
 int main(int argc, const char * argv[]) {
     FILE *file;
     fillSsym();
@@ -110,5 +155,5 @@ int main(int argc, const char * argv[]) {
 
     fclose(file);
     
-    parseInput(inputStream);
+    tokenizeInput(inputStream);
 }
