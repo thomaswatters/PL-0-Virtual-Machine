@@ -31,12 +31,13 @@ typedef enum {
 
 typedef struct {
     int kind; /*const = 1, var = 2, proc = 3*/
-    char name[10]; /*name up to 11*/
+    char *name; /*name up to 11*/
     int val; /*number (ASCII value)*/
     int level; /*L level*/
     int adr;   /*M address*/
 } namerecord_t;
 namerecord_t symbol_table[MAX_NAME_TABLE_SIZE];
+int index_symbolTable = 0;
 
 /*list of reserved keywords*/
 char *word[] = {"null","begin","call","cosnt","do","else","end","if","odd","procedure","read","then","var","while","write"};
@@ -82,15 +83,47 @@ void processToken(int start,int end, char stream[] ) {
     int len = end - start;
     char *token;
     
-    strncpy ( token, stream, len );
+//    strncpy ( token, &stream[start], len );
+    memcpy( token, &stream[start], len);
+    token[len] = '\0';
     
     for (i = 0; i < norw; i++) {
         //reserved word found
         if ( strcmp ( word[i], token ) == 0) {
             //DO STUFF!
+            namerecord_t r = { wsym[i], token, 0 /*convert digit to ascii value for this field*/, 0, 0 };
+            symbol_table[index_symbolTable] = r;
+            index_symbolTable++;
+            //print toke to various output files
         }
     }
     
+}
+
+void processSym(int j, char stream[]) {
+    char sym =  stream[j];
+    char nextSym = stream[j + 1];
+    char* symbol = 0;
+    
+    if ( sym == '/' && nextSym == '*') {
+        //comment check
+    }
+    else if (sym == ':' && nextSym == '=') {
+        //becomes
+        symbol = malloc( 3 * sizeof(char));
+        symbol[0] = sym;
+        symbol[1] = nextSym;
+        symbol[2] = '\0';
+    }
+    else {
+        symbol = malloc (2*sizeof(char));
+        symbol[0] = sym;
+        symbol[1] = '\0';
+    }
+ 
+    
+    /*TODO: check for comment and becomes*/
+    namerecord_t r = { ssym[sym], &sym, 0 /*convert digit to ascii value for this field*/, 0, 0 };
 }
 
 void tokenizeInput(char inputStream[]) {
@@ -117,8 +150,11 @@ void tokenizeInput(char inputStream[]) {
         //ch is special symbol
         else if ( isTokenDelim(ch) ) {
             processToken(i,j,inputStream);
-            //process special sym
+            //process special sym. handle comments and becomes
+            processSym(j, inputStream);
             //print symbol to files using j
+            
+            //increment i and j to next character in stream
             i = j + 1;
             j++;
         }
@@ -142,14 +178,21 @@ char* fillInputStream(FILE* file) {
     return inputStream;
 }
 
-int main(int argc, const char * argv[]) {
-    FILE *file;
-    fillSsym();
+FILE* openFile(char* fileName) {
+    FILE* file;
     
-    if (!(file = fopen("input.txt", "r" ))) {
+    if (!(file = fopen(fileName, "r" ))) {
         perror("input.txt");
         exit(1);
     }
+    
+    return file;
+}
+
+int main(int argc, const char * argv[]) {
+    FILE *file = openFile("input.txt");
+    
+    fillSsym();
     
     char* inputStream = fillInputStream(file);
 
